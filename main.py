@@ -156,6 +156,7 @@ def general_search(problem, queueing_function):
             time_elapsed = round(end - start, 3)
             print("Time elapsed: ", time_elapsed)
             print("Nodes expanded: ", nodes_expanded)
+            print("Depth: ", node.cost)
             return node
         if node.state not in visited: # Prevent repeated states by heappushing only if not visited
             visited.append(node.state)
