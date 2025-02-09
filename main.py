@@ -99,7 +99,7 @@ def expand(node, operators):
 def find_number(state, number):
     for i in range(3):
         for j in range(3):
-            if state[i][j] == number: # 
+            if state[i][j] == number:
                 return i, j
 
 def uniform_cost(nodes, children):
@@ -113,8 +113,9 @@ def A_star_misplaced(nodes, children):
         misplaced = 0
         for i in range(3):
             for j in range(3):
-                if child.state[i][j] != goal_state[i][j]: # Count all tiles that aren't in the correct position
-                    misplaced += 1
+                if (child.state[i][j] != 0): # Do not count 0
+                    if child.state[i][j] != goal_state[i][j]: # Count all tiles that aren't in the correct position
+                        misplaced += 1
         heapq.heappush(nodes, (child.cost + misplaced, child))
     return nodes
 
@@ -124,8 +125,9 @@ def A_star_manhattan(nodes, children):
         distance = 0
         for i in range(3):
             for j in range(3):
-                goal_i, goal_j = find_number(goal_state, child.state[i][j]) # Find where the current number is supposed to be
-                distance += abs(i - goal_i) + abs(j - goal_j) # Calculate manhattan distance to that position
+                if (child.state[i][j] != 0): # Do not count 0
+                    goal_i, goal_j = find_number(goal_state, child.state[i][j]) # Find where the current number is supposed to be
+                    distance += abs(i - goal_i) + abs(j - goal_j) # Calculate manhattan distance to that position
         heapq.heappush(nodes, (child.cost + distance, child)) # Push to pq, sorted by min (cost to get to a node + distance to goal)
     return nodes
 
@@ -144,21 +146,49 @@ def general_search(problem, queueing_function):
     while True:
         if empty(nodes): return None
         node = remove_front(nodes)
-        nodes_expanded += 1
         if problem.goal_test(node.state): 
             print("Nodes expanded: ", nodes_expanded)
             return node
-        children = expand(node, problem.operators)
-        for child in children:
-            if child.state not in visited: # Prevent repeated states by appending only if not visited
-                visited.append(child.state)
-                nodes = queueing_function(nodes, children)
-        # nodes = queueing_function(nodes, expand(node, problem.operators))
+        if node.state not in visited: # Prevent repeated states by appending only if not visited
+            visited.append(node.state)
+            nodes = queueing_function(nodes, expand(node, problem.operators))
+        nodes_expanded += 1
+        
 
 def main():
-    print("Welcome to the 8-puzzle solver!")
-    puzzle = depth_8
-    solved = general_search(Problem(puzzle), A_star_manhattan)
+    print("Welcome to the 8-puzzle solver! \n")
+    choice = input("Type 1 to use a default puzzle, or 2 to create your own: ")
+    if choice == '1':
+        user_depth = input("Choose a depth (1, 3, 4, 8, 12, 16, 20, 24): ")
+        default_puzzles = {
+            '1': depth_1,
+            '3': depth_3,
+            '4': depth_4,
+            '8': depth_8,
+            '12': depth_12,
+            '16': depth_16,
+            '20': depth_20,
+            '24': depth_24
+        }
+        # Let user choose algorithm
+        user_algorithm = input("Choose an algorithm: \n 1 for Uniform Cost \n 2 for A* with Misplaced Tile \n 3 for A* with Manhattan Distance: ")
+        search_algorithms = {'1': uniform_cost, '2': A_star_misplaced, '3': A_star_manhattan}
+        solved = general_search(Problem(default_puzzles[user_depth]), search_algorithms[user_algorithm])
+    
+    if choice == '2':
+        print("Enter a valid 8-puzzle state, one row at a time, each tile separated with 1 space. \n")
+        print("Use 0 as the blank tile. Hit enter after completing each row. \n")
+        row_1 = input("Enter the first row: ").split()
+        row_2 = input("Enter the second row: ").split()
+        row_3 = input("Enter the third row: ").split()
+        user_puzzle = [[int(row_1[0]), int(row_1[1]), int(row_1[2])],
+                       [int(row_2[0]), int(row_2[1]), int(row_2[2])],
+                       [int(row_3[0]), int(row_3[1]), int(row_3[2])]]
+        # Let user choose algorithm
+        user_algorithm = input("Choose an algorithm: \n 1 for Uniform Cost \n 2 for A* with Misplaced Tile \n 3 for A* with Manhattan Distance: ")
+        search_algorithms = {'1': uniform_cost, '2': A_star_misplaced, '3': A_star_manhattan}
+        solved = general_search(Problem(user_puzzle), search_algorithms[user_algorithm])
+    
     if solved:
         print("Solution found!")
         print_state(solved.state)
