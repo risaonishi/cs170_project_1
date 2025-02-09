@@ -1,4 +1,5 @@
 import heapq
+import time
 
 goal_state = [[1, 2, 3], 
               [4, 5, 6], 
@@ -62,11 +63,13 @@ class Problem:
             applicable_operators.append('Right')
         return applicable_operators
 
+# Using heapq to create a priority queue
 def make_queue(node):
     queue = []
     heapq.heappush(queue, (node.cost, node))
     return queue
 
+# Create new node
 def make_node(state, parent=None, cost=0):
     return Node(state, parent, cost)
 
@@ -79,6 +82,7 @@ def remove_front(nodes):
     print_state(nodes[0][1].state)
     return heapq.heappop(nodes)[1]
 
+# Applies all possible operators on the state and returns each new state (children)
 def expand(node, operators):
     children = []
     i, j = find_number(node.state, 0)
@@ -131,6 +135,7 @@ def A_star_manhattan(nodes, children):
         heapq.heappush(nodes, (child.cost + distance, child)) # Push to pq, sorted by min (cost to get to a node + distance to goal)
     return nodes
 
+# Prints space and newline separated state
 def print_state(state):
     for i in range(3):
         for j in range(3):
@@ -142,14 +147,17 @@ def general_search(problem, queueing_function):
     nodes = make_queue(make_node(problem.initial_state)) # Make queue and add initial state
     visited = [] # Used to prevent repetition
     nodes_expanded =0
-
+    start = time.perf_counter()
     while True:
         if empty(nodes): return None
         node = remove_front(nodes)
         if problem.goal_test(node.state): 
+            end = time.perf_counter()
+            time_elapsed = round(end - start, 3)
+            print("Time elapsed: ", time_elapsed)
             print("Nodes expanded: ", nodes_expanded)
             return node
-        if node.state not in visited: # Prevent repeated states by appending only if not visited
+        if node.state not in visited: # Prevent repeated states by heappushing only if not visited
             visited.append(node.state)
             nodes = queueing_function(nodes, expand(node, problem.operators))
         nodes_expanded += 1
@@ -187,13 +195,16 @@ def main():
         # Let user choose algorithm
         user_algorithm = input("Choose an algorithm: \n 1 for Uniform Cost \n 2 for A* with Misplaced Tile \n 3 for A* with Manhattan Distance: ")
         search_algorithms = {'1': uniform_cost, '2': A_star_misplaced, '3': A_star_manhattan}
+        start = time.perf_counter()
         solved = general_search(Problem(user_puzzle), search_algorithms[user_algorithm])
-    
+        end = time.perf_counter()
+        time_elapsed = end - start
+        print("Time elapsed: ", time_elapsed)
     if solved:
-        print("Solution found!")
+        print("Goal was reached!")
         print_state(solved.state)
     else:
-        print("No solution found.")
+        print("Goal not found.")
     return 0
 
 if __name__ == "__main__":
